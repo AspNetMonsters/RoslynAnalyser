@@ -41,18 +41,80 @@ namespace AnalyserPlay1.Test
         {   
         }
     }";
-            var expected = new DiagnosticResult
-            {
-                Id = "AnalyserPlay1",
-                Message = String.Format("Type name '{0}' contains lowercase letters", "TypeName"),
-                Severity = DiagnosticSeverity.Warning,
-                Locations =
-                    new[] {
-                            new DiagnosticResultLocation("Test0.cs", 11, 15)
-                        }
-            };
 
-            VerifyCSharpDiagnostic(test, expected);
+            VerifyCSharpDiagnostic(test);
+        }
+
+        [TestMethod]
+        public void No_diagnostic_for_authorize()
+        {
+            var test = @"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+    using Microsoft.AspNetCore.Authorization;
+
+    namespace ConsoleApplication1
+    {
+        [Authorize]
+        class TypeNameController
+        {   
+        }
+    }";
+
+            VerifyCSharpDiagnostic(test);
+        }
+
+        [TestMethod]
+        public void No_diagnostic_for_allow_anonymous_after_other()
+        {
+            var test = @"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+    using Microsoft.AspNetCore.Authorization;
+
+    namespace ConsoleApplication1
+    {
+        [AllowSquids]
+        [AllowAnonymous]
+        class TypeNameController
+        {   
+        }
+    }";
+
+            VerifyCSharpDiagnostic(test);
+        }
+
+        [TestMethod]
+        public void No_diagnostic_for_allow_anonymous_before_other()
+        {
+            var test = @"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+    using Microsoft.AspNetCore.Authorization;
+
+    namespace ConsoleApplication1
+    {
+        [AllowSquids]
+        [AllowAnonymous]
+        [AllowOysters]
+        class TypeNameController
+        {   
+        }
+    }";
+
+            VerifyCSharpDiagnostic(test);
         }
 
         [TestMethod]
@@ -69,6 +131,39 @@ namespace AnalyserPlay1.Test
 
     namespace ConsoleApplication1
     {
+        class TypeNameController
+        {   
+        }
+    }";
+            var expected = new DiagnosticResult
+            {
+                Id = "AnalyserPlay1",
+                Message = String.Format("Controller '{0}' is missing explicit authorization annotations", "TypeNameController"),
+                Severity = DiagnosticSeverity.Warning,
+                Locations =
+                    new[] {
+                            new DiagnosticResultLocation("Test0.cs", 12, 9)
+                        }
+            };
+
+            VerifyCSharpDiagnostic(test, expected);
+        }
+
+        [TestMethod]
+        public void Diagnostic_for_other_annotation()
+        {
+            var test = @"
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Text;
+    using System.Threading.Tasks;
+    using System.Diagnostics;
+    using Microsoft.AspNetCore.Authorization;
+
+    namespace ConsoleApplication1
+    {
+        [Threaded]
         class TypeNameController
         {   
         }

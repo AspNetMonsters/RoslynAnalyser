@@ -50,8 +50,9 @@ namespace AnalyserPlay1
                 //is a controller
                 // && !identifier.GetAnnotations("AllowAnonymous").Any()
                 var descendant = node.DescendantNodes((_) => true);
-                var attrbutes = node.DescendantNodes((_) => true).Where(x => x.Kind() == SyntaxKind.AttributeList).FirstOrDefault();
-                if (attrbutes == null)
+                var attrbuteLists = node.DescendantNodes((_) => true).Where(x => x.Kind() == SyntaxKind.AttributeList);
+                if (!attrbuteLists.Any() ||
+                    !ContainsAuthorizationAttribute(attrbuteLists))
                 {
                     var diagnostic = Diagnostic.Create(Rule, node.GetLocation(), identifier);
                     context.ReportDiagnostic(diagnostic);
@@ -59,6 +60,24 @@ namespace AnalyserPlay1
             }
         }
 
+        private static bool ContainsAuthorizationAttribute(IEnumerable<SyntaxNode> attributeList)
+        {
+            foreach(var item in attributeList)
+            {
+                if (ContainsAuthorizationAttribute((item as AttributeListSyntax).Attributes))
+                    return true;
+            }
+            return false;
+        }
+
+        private static bool ContainsAuthorizationAttribute(SeparatedSyntaxList<AttributeSyntax> attributes)
+        {
+            if (attributes.Any(x => (x.Name as IdentifierNameSyntax).Identifier.ValueText == "AllowAnonymous"))
+                return true;
+            if (attributes.Any(x => (x.Name as IdentifierNameSyntax).Identifier.ValueText == "Authorize"))
+                return true;
+            return false;
+        }
         private static void AnalyseClass(CodeBlockAnalysisContext context)
         {
             if (context.CodeBlock.Kind() == SyntaxKind.ClassDeclaration)
